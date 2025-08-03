@@ -1,0 +1,28 @@
+# Core AI and Agent Framework
+agno==1.5.0
+
+# Document Processing
+python-docx==1.1.2
+PyMuPDF==1.25.5
+
+# PDF Generation
+reportlab==4.2.5
+
+# Data Processing
+pydantic==2.11.4
+
+# Web Framework
+fastapi==0.115.12
+uvicorn==0.34.2
+
+# File Storage and Processing
+python-multipart==0.0.20
+
+# Job Scraping
+python-jobspy==1.1.80
+
+# Environment Variables
+python-dotenv==1.0.1
+
+# Google Generative AI
+google-generativeai==0.8.4

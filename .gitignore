@@ -1,0 +1,13 @@
+Backend/_pycache_
+Backend/__pycache__
+Backend/venv
+Backend/venv/
+Backend/venv/Scripts
+Backend/venv/Scripts/
+Backend/venv/Scripts/activate
+Backend/venv/Scripts/deactivate
+Backend/venv/Scripts/pip
+Backend/venv/Scripts/pip.exe
+Backend/venv/Scripts/pip.exe.exe
+Backend/uploads
+Backend/tailored_resumes/
