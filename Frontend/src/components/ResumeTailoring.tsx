@@ -10,7 +10,8 @@ import {
   RefreshCw,
   ArrowLeft,
   Target,
-  Zap
+  Zap,
+  ExternalLink
 } from 'lucide-react';
 
 interface Job {
@@ -244,6 +245,16 @@ export const ResumeTailoring: React.FC<ResumeTailoringProps> = ({ selectedJobs, 
     }
   };
 
+  const handleOpenJobPosting = (job: TailoringJob) => {
+    if (!job.linkedinUrl || job.linkedinUrl === '#') {
+      alert('No job posting URL available for this position.');
+      return;
+    }
+    
+    // Open the LinkedIn job posting in a new tab
+    window.open(job.linkedinUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const getStatusIcon = (status: TailoringJob['status']) => {
     switch (status) {
       case 'pending':
@@ -446,13 +457,23 @@ export const ResumeTailoring: React.FC<ResumeTailoringProps> = ({ selectedJobs, 
                 {/* Actions */}
                 <div className="flex flex-col space-y-3 lg:min-w-[200px]">
                   {job.status === 'completed' && (
-                    <button
-                      onClick={() => handleDownload(job)}
-                      className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-200"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Download Resume</span>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleDownload(job)}
+                        className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-200"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span>Download Resume</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => handleOpenJobPosting(job)}
+                        className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>Apply on LinkedIn</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

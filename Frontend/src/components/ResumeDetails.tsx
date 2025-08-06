@@ -172,10 +172,15 @@ export const ResumeDetails: React.FC<ResumeDetailsProps> = ({ extractedData, upl
     const [editableData, setEditableData] = useState<any>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [hasBeenEdited, setHasBeenEdited] = useState(false);
 
     useEffect(() => {
-      setEditableData(extractedData);
-    }, [extractedData]);
+      // Only set editableData from extractedData if it hasn't been edited yet
+      // This prevents overwriting user edits when navigating back to this page
+      if (!hasBeenEdited) {
+        setEditableData(extractedData);
+      }
+    }, [extractedData, hasBeenEdited]);
 
     const handleDataChange = (path: (string | number)[], value: any) => {
       setEditableData((prevData: any) => {
@@ -187,6 +192,9 @@ export const ResumeDetails: React.FC<ResumeDetailsProps> = ({ extractedData, upl
         current[path[path.length - 1]] = value;
         return newData;
       });
+      
+      // Mark that the data has been edited
+      setHasBeenEdited(true);
     };
 
     const handleSave = async () => {
@@ -205,6 +213,8 @@ export const ResumeDetails: React.FC<ResumeDetailsProps> = ({ extractedData, upl
 
         if (response.ok) {
           setSaveStatus('success');
+          // Reset the edited flag since we've successfully saved
+          setHasBeenEdited(false);
           // Navigate to job search after successful save
           setTimeout(() => {
             if (onNavigateToJobSearch) {
@@ -240,17 +250,30 @@ export const ResumeDetails: React.FC<ResumeDetailsProps> = ({ extractedData, upl
   
           {editableData ? (
             <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 border-b pb-4">Extracted Information</h3>
+              <div className="flex items-center justify-between mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  {hasBeenEdited ? 'Edited Resume Information' : 'Extracted Information'}
+                </h3>
+                {hasBeenEdited && (
+                  <span className="text-sm text-orange-600 bg-orange-100 px-3 py-1 rounded-full font-medium">
+                    Unsaved Changes
+                  </span>
+                )}
+              </div>
               <JsonRenderer data={editableData} onDataChange={handleDataChange} />
               <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end items-center">
                 {saveStatus === 'success' && <p className="text-green-600 mr-4">Saved successfully!</p>}
                 {saveStatus === 'error' && <p className="text-red-600 mr-4">Failed to save.</p>}
                 <button
                   onClick={handleSave}
-                  disabled={isSaving}
-                  className="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 disabled:bg-gray-400"
+                  disabled={isSaving || !hasBeenEdited}
+                  className={`px-6 py-2 font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-opacity-75 ${
+                    isSaving || !hasBeenEdited
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
+                  }`}
                 >
-                  {isSaving ? 'Saving...' : 'Save Resume Details'}
+                  {isSaving ? 'Saving...' : hasBeenEdited ? 'Save Resume Details' : 'No Changes to Save'}
                 </button>
               </div>
             </div>
