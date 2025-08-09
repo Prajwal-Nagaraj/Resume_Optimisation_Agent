@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Briefcase, GraduationCap, Award, User, Code, Calendar, MapPin, Link as LinkIcon, Building } from 'lucide-react';
+import { FileText, Briefcase, GraduationCap, Award, User, Code, Calendar, MapPin, Link as LinkIcon, Building, Trash2 } from 'lucide-react';
 
 // A mapping from key names to icons
 const iconMapping: { [key: string]: React.ElementType } = {
@@ -101,13 +101,16 @@ const JsonRenderer: React.FC<{
             {onDataChange && (
               <button
                 onClick={() => removeItem(index)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700 text-sm font-bold"
+                className="absolute top-2 right-2 inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition transform hover:scale-105"
                 title="Remove item"
+                aria-label="Remove item"
               >
-                ×
+                <Trash2 className="h-4 w-4" />
               </button>
             )}
-            <JsonRenderer data={item} level={level + 1} path={[...path, index]} onDataChange={onDataChange} />
+            <div className="pr-12">
+              <JsonRenderer data={item} level={level + 1} path={[...path, index]} onDataChange={onDataChange} />
+            </div>
           </div>
         ))}
         {onDataChange && (

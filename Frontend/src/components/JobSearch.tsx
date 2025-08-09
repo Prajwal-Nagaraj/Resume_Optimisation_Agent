@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Calendar, Globe, Settings, Briefcase, Target, CheckSquare, Square, Hash } from 'lucide-react';
+import { Search, MapPin, Calendar, Globe, Settings, Briefcase, Target, CheckSquare, Square, Hash, ClipboardList, PlusCircle, Trash2 } from 'lucide-react';
 import { JobCard } from './JobCard';
 import { JobDetailsModal } from './JobDetailsModal';
 
@@ -42,6 +42,10 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
   const [isTailoring, setIsTailoring] = useState(false);
+  const [activeTab, setActiveTab] = useState<'search' | 'paste'>('search');
+  const [pastedJobs, setPastedJobs] = useState<Array<{ company: string; description: string }>>([
+    { company: '', description: '' }
+  ]);
 
   const dateOptions = [
     { value: 'any', label: 'Any time' },
@@ -106,17 +110,11 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
     }
   };
 
-  const tailorResumeWithBackend = async (selectedJobsData: Job[]) => {
+  const tailorResumeWithBackend = async (jobDescriptions: Array<{ description: string; company: string }>) => {
     try {
       if (!resumeId) {
         throw new Error('No resume uploaded. Please upload a resume first.');
       }
-
-      // Transform jobs data to send job descriptions and company names
-      const jobDescriptions = selectedJobsData.map(job => ({
-        description: job.description,
-        company: job.company
-      }));
 
       const payload = {
         resume_id: resumeId,
@@ -228,10 +226,20 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
     }
   };
 
+  const getSelectedJobsData = () => jobs.filter(job => selectedJobs.has(job.id));
+
+  const getCombinedJobDescriptions = () => {
+    const selectedJobsData = getSelectedJobsData();
+    const fromSelected = selectedJobsData.map(job => ({ description: job.description, company: job.company }));
+    const fromPasted = pastedJobs
+      .filter(p => p.description.trim().length > 0)
+      .map(p => ({ description: p.description.trim(), company: p.company.trim() || 'Unknown Company' }));
+    return { selectedJobsData, jobDescriptions: [...fromSelected, ...fromPasted] };
+  };
+
   const handleTailorResumes = async () => {
     if (selectedJobs.size === 0) {
-      alert('Please select at least one job to tailor your resume for.');
-      return;
+      // It's okay if there are pasted jobs; validate later
     }
 
     if (!resumeId) {
@@ -242,19 +250,43 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
     setIsTailoring(true);
     
     try {
-      // Get the selected job objects
-      const selectedJobsData = jobs.filter(job => selectedJobs.has(job.id));
+      // Prepare combined data from selected jobs and pasted descriptions
+      const { selectedJobsData, jobDescriptions } = getCombinedJobDescriptions();
+      if (jobDescriptions.length === 0) {
+        alert('Please select jobs from search or paste at least one job description.');
+        return;
+      }
       
       // Start resume tailoring process with backend
       console.log('Starting resume tailoring process...');
-      const tailoringResult = await tailorResumeWithBackend(selectedJobsData);
+      const tailoringResult = await tailorResumeWithBackend(jobDescriptions);
       
       if (tailoringResult.task_id) {
         console.log('Resume tailoring started with task ID:', tailoringResult.task_id);
         alert(`✅ Resume tailoring started successfully! Task ID: ${tailoringResult.task_id}\n\nYou can check the status in the tailoring tab.`);
         
-        // Navigate to tailoring tab with selected jobs and task ID
-        onJobsTailored(selectedJobsData, tailoringResult.task_id);
+        // Build combined jobs list for the tailoring status page
+        const syntheticFromPasted: Job[] = pastedJobs
+          .filter(p => p.description.trim().length > 0)
+          .map((p, idx) => ({
+            id: `pasted_${Date.now()}_${idx}`,
+            title: 'Custom Job',
+            company: p.company || 'Unknown Company',
+            location: 'N/A',
+            postedDate: 'N/A',
+            description: p.description,
+            employmentType: 'N/A',
+            experienceLevel: 'N/A',
+            salary: undefined,
+            linkedinUrl: '#',
+            companyLogo: undefined,
+            applicants: undefined
+          }));
+
+        const combinedJobs = [...selectedJobsData, ...syntheticFromPasted];
+
+        // Navigate to tailoring tab with combined jobs and task ID
+        onJobsTailored(combinedJobs, tailoringResult.task_id);
       } else {
         throw new Error('No task ID received from backend');
       }
@@ -267,12 +299,15 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
     }
   };
 
-  const TailorButton = ({ className = "" }: { className?: string }) => (
+  const TailorButton = ({ className = "" }: { className?: string }) => {
+    const { jobDescriptions } = getCombinedJobDescriptions();
+    const disabled = jobDescriptions.length === 0 || isTailoring || !resumeId;
+    return (
     <button
       onClick={handleTailorResumes}
-      disabled={selectedJobs.size === 0 || isTailoring || !resumeId}
+      disabled={disabled}
       className={`inline-flex items-center space-x-3 px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200 ${
-        selectedJobs.size === 0 || isTailoring || !resumeId
+        disabled
           ? 'bg-gray-400 cursor-not-allowed text-white'
           : 'bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl'
       } ${className}`}
@@ -286,17 +321,18 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
         <>
           <Target className="h-5 w-5" />
           <span>
-            {!resumeId 
-              ? 'Upload Resume First' 
-              : selectedJobs.size === 0 
-                ? 'Select Jobs to Tailor Resume'
-                : `Tailor Resume for Selected Jobs (${selectedJobs.size})`
+            {!resumeId
+              ? 'Upload Resume First'
+              : jobDescriptions.length === 0
+                ? 'Select or Paste Jobs to Tailor Resume'
+                : `Tailor Resume (${jobDescriptions.length})`
             }
           </span>
         </>
       )}
     </button>
   );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -311,8 +347,28 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
           </p>
         </div>
 
-        {/* Search Form */}
+        {/* Tabs */}
+        <div className="mb-4 flex justify-center">
+          <div className="inline-flex rounded-xl bg-gray-100 p-1">
+            <button
+              className={`px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'search' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-800'}`}
+              onClick={() => setActiveTab('search')}
+            >
+              Job Search
+            </button>
+            <button
+              className={`px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'paste' ? 'bg-white shadow text-gray-900' : 'text-gray-600 hover:text-gray-800'}`}
+              onClick={() => setActiveTab('paste')}
+            >
+              Paste Descriptions
+            </button>
+          </div>
+        </div>
+
+        {/* Search or Paste Content */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          {activeTab === 'search' ? (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {/* Job Title */}
             <div className="space-y-2">
@@ -456,10 +512,73 @@ export const JobSearch: React.FC<JobSearchProps> = ({ onJobsTailored, resumeId }
               )}
             </button>
           </div>
+            </>
+          ) : (
+            // Paste Descriptions Tab
+            <>
+              <div className="mb-6">
+                <div className="flex items-center space-x-3 mb-2">
+                  <ClipboardList className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-900">Paste Job Descriptions</h3>
+                </div>
+                <p className="text-sm text-gray-600">Add one or more job descriptions. Company is optional.</p>
+              </div>
+
+              <div className="space-y-6">
+                {pastedJobs.map((p, idx) => (
+                  <div key={idx} className="relative border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <button
+                      onClick={() => setPastedJobs(prev => prev.filter((_, i) => i !== idx))}
+                      className="absolute top-2 right-2 inline-flex items-center justify-center h-8 w-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                      title="Remove description"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Company (optional)</label>
+                        <input
+                          type="text"
+                          value={p.company}
+                          onChange={(e) => setPastedJobs(prev => prev.map((item, i) => i === idx ? { ...item, company: e.target.value } : item))}
+                          placeholder="e.g. Acme Corp"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+                        <textarea
+                          value={p.description}
+                          onChange={(e) => setPastedJobs(prev => prev.map((item, i) => i === idx ? { ...item, description: e.target.value } : item))}
+                          rows={6}
+                          placeholder="Paste the full job description here..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div>
+                  <button
+                    onClick={() => setPastedJobs(prev => [...prev, { company: '', description: '' }])}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <PlusCircle className="h-5 w-5 text-gray-700" />
+                    <span>Add another description</span>
+                  </button>
+                </div>
+
+                <div className="text-center pt-4">
+                  <TailorButton />
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Search Results */}
-        {searchPerformed && (
+        {activeTab === 'search' && searchPerformed && (
           <div className="space-y-6">
             {jobs.length > 0 ? (
               <>
