@@ -116,15 +116,23 @@ The frontend will start on `http://localhost:5173`.
    - Click on "Upload Resume" or drag and drop your PDF/DOC file
    - Wait for the AI to parse and analyze your resume
 
-3. **Search for Jobs**
-   - Use the job search feature to find relevant positions
-   - Filter by location, company, experience level, etc.
-   - Browse through job cards with detailed information
+3. **Find Jobs to Tailor For**
+   - **Option A: Search for Jobs**
+     - Use the job search feature to find relevant positions
+     - Filter by location, company, experience level, etc.
+     - Browse through job cards with detailed information
+     - Select multiple jobs you want to apply for
+   
+   - **Option B: Paste Job Descriptions**
+     - Paste job descriptions directly from any source
+     - Add company names (optional) for better organization
+     - Add multiple job descriptions at once
+     - Remove or edit descriptions as needed
 
-4. **Select Jobs for Tailoring**
-   - Select multiple jobs you want to apply for
+4. **Combine and Tailor**
+   - Mix and match jobs from search results and pasted descriptions
    - Review job details and requirements
-   - Proceed to tailoring process
+   - Proceed to tailoring process with combined selection
 
 5. **Monitor Progress**
    - Watch real-time progress as AI tailors your resume
@@ -138,6 +146,8 @@ The frontend will start on `http://localhost:5173`.
 
 ### Advanced Features
 
+- **Flexible Job Input**: Search for jobs automatically or paste descriptions manually
+- **Combined Processing**: Mix jobs from search results and pasted descriptions
 - **Batch Processing**: Select up to 10+ jobs for simultaneous tailoring
 - **Resume Optimization**: AI analyzes job descriptions and optimizes content
 - **Professional Formatting**: Maintains clean, ATS-friendly formatting
@@ -165,7 +175,7 @@ Resume_Tailor_Frontend/
 │   │   │   ├── FileUpload.tsx      # Resume upload component
 │   │   │   ├── JobCard.tsx         # Job display card
 │   │   │   ├── JobDetailsModal.tsx # Job details modal
-│   │   │   ├── JobSearch.tsx       # Job search interface
+│   │   │   ├── JobSearch.tsx       # Job search and description input interface
 │   │   │   ├── LandingPage.tsx     # Landing page component
 │   │   │   ├── Navigation.tsx      # Navigation bar
 │   │   │   ├── ResumeDetails.tsx   # Resume details view
