@@ -466,13 +466,15 @@ export const ResumeTailoring: React.FC<ResumeTailoringProps> = ({ selectedJobs, 
                         <span>Download Resume</span>
                       </button>
                       
-                      <button
-                        onClick={() => handleOpenJobPosting(job)}
-                        className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        <span>Apply on LinkedIn</span>
-                      </button>
+                      {job.linkedinUrl && job.linkedinUrl !== '#' && (
+                        <button
+                          onClick={() => handleOpenJobPosting(job)}
+                          className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          <span>Apply on LinkedIn</span>
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
